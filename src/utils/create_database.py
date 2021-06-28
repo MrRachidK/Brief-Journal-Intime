@@ -125,7 +125,7 @@ data_text = []
 for i in range(len(string_texts)):
      random_date = insert_random_date()
      predicted_emotion, proba_emotion = predict_emotion(string_texts[i], vectorizer, model)
-     text = (random.choice(list_id_customer), random_date, string_texts[i], predicted_emotion, round(proba_emotion[0][0], 4) * 100, round(proba_emotion[0][1], 4) * 100)
+     text = (random.choice(list_id_customer), random_date, string_texts[i], predicted_emotion, round(proba_emotion[0][0] * 100, 4), round(proba_emotion[0][1] * 100, 4))
      data_text.append(text)
 
 try:

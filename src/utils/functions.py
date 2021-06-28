@@ -13,7 +13,7 @@ def call_connector():
     passwd = passwd,
     database="coaching")
 
-    db_cursor = db_connection.cursor(buffered=True)
+    db_cursor = db_connection.cursor(buffered=True, dictionary=False)
     return db_connection, db_cursor
 
 def insert_random_date():
