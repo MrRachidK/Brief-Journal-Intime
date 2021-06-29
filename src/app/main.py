@@ -4,7 +4,7 @@ import streamlit as st
 import requests
 import datetime
 from src.config import user, passwd
-from src.utils.create_database import add_customer, customer_age, IntegrityError
+from src.utils.create_database import add_customer, customer_age
 from src.utils.functions import *
 
 menu = st.sidebar.radio("Que souhaitez-vous faire ?", ("Créer un utilisateur", "Modifier un utilisateur", "Supprimer un utilisateur", "Lister tous les clients et les informations sur eux", "Afficher le texte d'un utilisateur et ses infos à une date précise", "Obtenir la roue des sentiments moyenne d'un client sur une période donnée", "Obtenir la roue des sentiments moyenne de tous les clients sur une période donnée"))
@@ -34,10 +34,11 @@ if menu == "Créer un utilisateur" :
   if submit_button:
     try :
       response = requests.post(url, json = user_data)
-    except IntegrityError :
+      st.write(response)
+    except :
       st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
-    except requests.ConnectionError as error:
-      print(error)
+    # except requests.ConnectionError as error:
+    #   print(error)
     db_cursor.execute(customer_age)
 
   db_connection.commit()
@@ -135,8 +136,8 @@ elif menu == "Afficher le texte d'un utilisateur et ses infos à une date préci
       st.write("Date du texte : {}".format(response["0"]["text_date"]))
       st.write("Texte : {}".format(response["0"]["text"]))
       st.write("Emotion principale du texte : {}".format(response["0"]["text_first_emotion"]))
-      st.write("Probabilité d'une émotion négative : {}".format(response["0"]["proba_negative_emotion"]))
-      st.write("Probabilité d'une émotion positive : {}".format(response["0"]["proba_positive_emotion"]))
+      st.write("Probabilité d'une émotion négative : {} %".format(response["0"]["proba_negative_emotion"]))
+      st.write("Probabilité d'une émotion positive : {} %".format(response["0"]["proba_positive_emotion"]))
     except IntegrityError :
       st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
     except requests.ConnectionError as error:
