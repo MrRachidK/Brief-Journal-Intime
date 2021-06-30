@@ -138,7 +138,7 @@ def get_text_infos(text : TextBase):
 @app.get("/get_average_feeling_wheel_client")
 def get_average_feeling_wheel_client(text:TextBase):
     db_cursor = db_connection.cursor(buffered=True, dictionary=True)
-    query = """ SELECT * FROM text WHERE id_customer = '%d' AND (text_date > '%s' AND text_date < '%s') """
+    query = """ SELECT * FROM text WHERE id_customer = '%d' AND (text_date >= '%s' AND text_date <= '%s') """
     db_cursor.execute(query%(text.id_customer, text.date_start, text.date_end))
     rows = db_cursor.fetchall()
     print(rows)
@@ -162,7 +162,7 @@ def get_average_feeling_wheel_client(text:TextBase):
 @app.get("/get_average_feeling_wheel_clients")
 def get_average_feeling_wheel_clients(text:TextBase):
     db_cursor = db_connection.cursor(buffered=True, dictionary=True)
-    query = """ SELECT * FROM text WHERE text_date > '%s' AND text_date < '%s' """
+    query = """ SELECT * FROM text WHERE text_date >= '%s' AND text_date <= '%s' """
     db_cursor.execute(query%(text.date_start, text.date_end))
     rows = db_cursor.fetchall()
     print(rows)
