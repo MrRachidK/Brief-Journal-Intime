@@ -79,8 +79,8 @@ async def create_customer(customer:UserBase):
 
 @app.delete("/delete_customer")
 def delete_customer(customer:UserBase):
-    query = """ DELETE FROM customer WHERE name = '%s' AND first_name = '%s' """
-    db_cursor.execute(query % (customer.name, customer.first_name))
+    query = """ DELETE FROM customer WHERE name = '%s' AND first_name = '%s' AND date_of_birth = '%s'"""
+    db_cursor.execute(query % (customer.name, customer.first_name, customer.date_of_birth))
     db_connection.commit()
     return customer
 
@@ -142,14 +142,17 @@ def get_average_feeling_wheel_client(text:TextBase):
     db_cursor.execute(query%(text.id_customer, text.date_start, text.date_end))
     rows = db_cursor.fetchall()
     print(rows)
+    text_numbers = 0
     average_negative_emotion = 0
     average_positive_emotion = 0
-    average_feeling_wheel_client = {"average_negative_emotion": average_negative_emotion, "average_positive_emotion": average_positive_emotion}
+    average_feeling_wheel_client = {"text_numbers": text_numbers, "average_negative_emotion": average_negative_emotion, "average_positive_emotion": average_positive_emotion}
     for row in rows:
+        text_numbers += 1
         average_negative_emotion = average_negative_emotion + row["proba_negative_emotion"]
         average_feeling_wheel_client["average_negative_emotion"] = average_negative_emotion
         average_positive_emotion = average_positive_emotion + row["proba_positive_emotion"]
         average_feeling_wheel_client["average_positive_emotion"] = average_positive_emotion
+    average_feeling_wheel_client["text_numbers"] = text_numbers
     average_feeling_wheel_client["average_negative_emotion"] = round(average_feeling_wheel_client["average_negative_emotion"] / len(rows), 4)
     average_feeling_wheel_client["average_positive_emotion"] = round(average_feeling_wheel_client["average_positive_emotion"] / len(rows), 4)
     return average_feeling_wheel_client
@@ -163,16 +166,17 @@ def get_average_feeling_wheel_clients(text:TextBase):
     db_cursor.execute(query%(text.date_start, text.date_end))
     rows = db_cursor.fetchall()
     print(rows)
+    text_numbers = 0
     average_negative_emotion = 0
     average_positive_emotion = 0
-    average_feeling_wheel_clients = {"average_negative_emotion": average_negative_emotion, "average_positive_emotion": average_positive_emotion}
+    average_feeling_wheel_clients = {"text_numbers": text_numbers, "average_negative_emotion": average_negative_emotion, "average_positive_emotion": average_positive_emotion}
     for row in rows:
+        text_numbers += 1
         average_negative_emotion = average_negative_emotion + row["proba_negative_emotion"]
         average_feeling_wheel_clients["average_negative_emotion"] = average_negative_emotion
         average_positive_emotion = average_positive_emotion + row["proba_positive_emotion"]
         average_feeling_wheel_clients["average_positive_emotion"] = average_positive_emotion
-    print(average_negative_emotion)
-    print(average_positive_emotion)
+    average_feeling_wheel_clients["text_numbers"] = text_numbers
     average_feeling_wheel_clients["average_negative_emotion"] = round(average_feeling_wheel_clients["average_negative_emotion"] / len(rows), 4)
     average_feeling_wheel_clients["average_positive_emotion"] = round(average_feeling_wheel_clients["average_positive_emotion"] / len(rows), 4)
     return average_feeling_wheel_clients

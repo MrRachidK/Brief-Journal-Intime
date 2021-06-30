@@ -43,3 +43,12 @@ def predict_emotion(message, vectorizer, model):
     emotion = model[0].predict(vectorized_message)
     proba_emotion = model[0].predict_proba(vectorized_message)
     return emotions[int(emotion)], proba_emotion
+
+def get_formatted_date(date, isCapitalized = True):
+    date_to_datetime = datetime.datetime.strptime(date, '%Y-%m-%d')
+    datetime_to_string = date_to_datetime.strftime("%A %d %B %Y")
+    if isCapitalized:
+        formatted_date = datetime_to_string.capitalize()
+    else :
+        formatted_date = datetime_to_string
+    return formatted_date

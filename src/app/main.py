@@ -2,10 +2,13 @@ import sys
 sys.path.insert(0, "/home/apprenant/Documents/Brief-Journal-Intime/")
 import streamlit as st
 import requests
-import datetime
+from datetime import datetime, date
 from src.config import user, passwd
 from src.utils.create_database import add_customer, customer_age
+from mysql.connector.errors import ProgrammingError, IntegrityError
 from src.utils.functions import *
+import locale 
+locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 menu = st.sidebar.radio("Que souhaitez-vous faire ?", ("Créer un utilisateur", "Modifier un utilisateur", "Supprimer un utilisateur", "Lister tous les clients et les informations sur eux", "Afficher le texte d'un utilisateur et ses infos à une date précise", "Obtenir la roue des sentiments moyenne d'un client sur une période donnée", "Obtenir la roue des sentiments moyenne de tous les clients sur une période donnée"))
 
@@ -23,22 +26,25 @@ if menu == "Créer un utilisateur" :
   user_data['first_name'] = st.text_input('Votre prénom')
   st.write('Voici le prénom que vous avez entré :', user_data['first_name'])
 
-  user_data['date_of_birth'] = st.date_input('Votre date de naissance', value = None, min_value = datetime.date(1900, 1, 1))
+  user_data['date_of_birth'] = st.date_input('Votre date de naissance', value = None, min_value = date(1900, 1, 1))
   user_data['date_of_birth'] = str(user_data['date_of_birth'])
-  st.write('Voici la date de naissance que vous avez entré :', user_data['date_of_birth'])
-
+  formatted_date = get_formatted_date(user_data['date_of_birth'], False)
+  st.write('Voici la date de naissance que vous avez entré :', formatted_date)
+  
   customer_data = [(user_data['name'], user_data['first_name'], user_data['date_of_birth'])]
 
-  submit_button = st.button("Submit")
+  submit_button = st.button("Soumettre")
 
   if submit_button:
     try :
       response = requests.post(url, json = user_data)
-      st.write(response)
+      response = response.json()
+      st.write("Bravo ! Vous avez réussi à créer le client suivant :")
+      st.write("Nom : {}".format(response["name"]))
+      st.write("Prénom : {}".format(response["first_name"]))
+      st.write("Date de naissance : {}".format(get_formatted_date(response["date_of_birth"], False)))
     except :
-      st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
-    # except requests.ConnectionError as error:
-    #   print(error)
+      st.write("Nous n\'avons pas pu enregistrer ces informations car le client existe déjà dans la base de données")
     db_cursor.execute(customer_age)
 
   db_connection.commit()
@@ -56,21 +62,22 @@ elif menu == "Modifier un utilisateur":
   user_data['first_name'] = st.text_input("Nouveau prénom de l'utilisateur")
 
   st.write("Renseignez la nouvelle date de naissance que vous voulez entrer")
-  user_data['date_of_birth'] = st.date_input("Nouvelle date de naissance de l'utilisateur", value = None, min_value = datetime.date(1900, 1, 1))
+  user_data['date_of_birth'] = st.date_input("Nouvelle date de naissance de l'utilisateur", value = None, min_value = date(1900, 1, 1))
   user_data['date_of_birth'] = str(user_data['date_of_birth'])
+  formatted_date = get_formatted_date(user_data['date_of_birth'])
 
   st.write("Renseignez l'id de l'utilisateur que vous souhaitez modifier")
   user_data['id_customer'] = st.text_input("Id de l'utilisateur")
 
-  submit_button = st.button("Submit")
+  submit_button = st.button("Soumettre")
   
   if submit_button:
-    try:
-      response = requests.put(url, json = user_data)
-    except IntegrityError :
-      st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
-    except requests.ConnectionError as error:
-      print(error)
+    response = requests.put(url, json = user_data)
+    response = response.json()
+    st.write("Vous avez modifié avec succès le client numéro {}. Voici ses données actualisées :".format(user_data['id_customer']))
+    st.write("Nom : {}".format(response['new_name']))
+    st.write("Prénom : {}".format(response['new_first_name']))
+    st.write("Date de naissance : {}".format(get_formatted_date(response['new_date_of_birth'], False)))
   db_connection.commit()
 
 elif menu == "Supprimer un utilisateur":
@@ -86,19 +93,22 @@ elif menu == "Supprimer un utilisateur":
   user_data['first_name'] = st.text_input("Prénom de l'utilisateur")
 
   st.write("Renseignez la date de naissance de l'utilisateur que vous souhaitez retirer")
-  user_data['date_of_birth'] = st.date_input("Date de naissance de l'utilisateur", value = None, min_value = datetime.date(1900, 1, 1))
+  user_data['date_of_birth'] = st.date_input("Date de naissance de l'utilisateur", value = None, min_value = date(1900, 1, 1))
   user_data['date_of_birth'] = str(user_data['date_of_birth'])
-
+  formatted_date = get_formatted_date(user_data['date_of_birth'])
 
   submit_button = st.button("Submit")
   
   if submit_button:
     try:
       response = requests.delete(url, json = user_data)
-    except IntegrityError :
-      st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
-    except requests.ConnectionError as error:
-      print(error)
+      response = response.json()
+      st.write("Suppression du client suivant confirmé :")
+      st.write("Nom : {}".format(response['name']))
+      st.write("Prénom : {}".format(response['first_name']))
+      st.write("Date de naissance : {}".format(get_formatted_date(response['date_of_birth']), False))
+    except :
+      st.write("Nous n\'avons pas pu supprimer ces informations car le client n'existe pas dans la base de données")
   db_connection.commit()
 
 elif menu == "Lister tous les clients et les informations sur eux" :
@@ -111,7 +121,7 @@ elif menu == "Lister tous les clients et les informations sur eux" :
     st.header("Client numéro {}".format(int(key)))
     st.write("Nom : {}".format(response[key]["name"]))
     st.write("Prénom : {}".format(response[key]["first_name"]))
-    st.write("Date de naissance : {}".format(response[key]["date_of_birth"]))
+    st.write("Date de naissance : {}".format(get_formatted_date(response[key]["date_of_birth"], False)))
     st.markdown("_________")
 
 elif menu == "Afficher le texte d'un utilisateur et ses infos à une date précise":
@@ -124,7 +134,8 @@ elif menu == "Afficher le texte d'un utilisateur et ses infos à une date préci
   user_data['id_customer'] = st.text_input("Id de l'utilisateur")
 
   st.write("Renseignez la date du texte entré par l'utilisateur")
-  user_data['text_date'] = st.text_input("Date du texte")
+  user_data['text_date'] = st.date_input('Date du texte', value = None, min_value = date(1900, 1, 1))
+  user_data['text_date'] = str(user_data['text_date'])
 
   submit_button = st.button("Submit")
   
@@ -133,15 +144,13 @@ elif menu == "Afficher le texte d'un utilisateur et ses infos à une date préci
       response = requests.get(url, json = user_data)
       response = response.json()
       st.header("Client numéro {}".format(response["0"]["id_customer"]))
-      st.write("Date du texte : {}".format(response["0"]["text_date"]))
+      st.write("Date du texte : {}".format(get_formatted_date(response["0"]["text_date"], False)))
       st.write("Texte : {}".format(response["0"]["text"]))
       st.write("Emotion principale du texte : {}".format(response["0"]["text_first_emotion"]))
       st.write("Probabilité d'une émotion négative : {} %".format(response["0"]["proba_negative_emotion"]))
       st.write("Probabilité d'une émotion positive : {} %".format(response["0"]["proba_positive_emotion"]))
-    except IntegrityError :
-      st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
-    except requests.ConnectionError as error:
-      print(error)
+    except KeyError :
+      st.write("Aucun texte de cet ID utilisateur n'existe dans la base de données")
   db_connection.commit()
 
 elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une période donnée":
@@ -154,10 +163,12 @@ elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une périod
   user_data['id_customer'] = st.text_input("Id de l'utilisateur")
 
   st.write("Renseignez pour la période la date la plus ancienne")
-  user_data['date_start'] = st.text_input("Date la plus ancienne")
+  user_data['date_start'] = st.date_input('Date la plus ancienne', value = None, min_value = date(1900, 1, 1))
+  user_data['date_start'] = str(user_data['date_start'])
 
   st.write("Renseignez pour la période la date la plus récente")
-  user_data['date_end'] = st.text_input("Date la plus récente")
+  user_data['date_end'] = st.date_input('Date la plus récente', value = None, min_value = date(1900, 1, 1))
+  user_data['date_end'] = str(user_data['date_end'])
 
   submit_button = st.button("Submit")
   
@@ -166,13 +177,12 @@ elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une périod
       response = requests.get(url, json = user_data)
       response = response.json()
       st.header("Client numéro {}".format(user_data['id_customer']))
-      st.subheader("Période du {} au {}".format(user_data['date_start'], user_data['date_end']))
+      st.subheader("Période du {} au {}".format(get_formatted_date(user_data['date_start'], False), get_formatted_date(user_data['date_end'], False)))
+      st.write("Nombre de textes sur cette période : {}".format(response["text_numbers"]))
       st.write("Probabilité moyenne d'émotion négative : {} %".format(response["average_negative_emotion"]))
       st.write("Probabilité moyenne d'émotion positive : {} %".format(response["average_positive_emotion"]))
-    except IntegrityError :
-      st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
-    except requests.ConnectionError as error:
-      print(error)
+    except :
+      st.write("Aucun texte n'est répertorié sur cette période-là")
   db_connection.commit()
 
 else :
@@ -182,10 +192,12 @@ else :
   user_data = {}
 
   st.write("Renseignez pour la période la date la plus ancienne")
-  user_data['date_start'] = st.text_input("Date la plus ancienne")
+  user_data['date_start'] = st.date_input('Date la plus ancienne', value = None, min_value = date(1900, 1, 1))
+  user_data['date_start'] = str(user_data['date_start'])
 
   st.write("Renseignez pour la période la date la plus récente")
-  user_data['date_end'] = st.text_input("Date la plus récente")
+  user_data['date_end'] = st.date_input('Date la plus récente', value = None, min_value = date(1900, 1, 1))
+  user_data['date_end'] = str(user_data['date_end'])
 
   submit_button = st.button("Submit")
   
@@ -193,7 +205,8 @@ else :
     try:
       response = requests.get(url, json = user_data)
       response = response.json()
-      st.subheader("Période du {} au {}".format(user_data['date_start'], user_data['date_end']))
+      st.subheader("Période du {} au {}".format(get_formatted_date(user_data['date_start'], False), get_formatted_date(user_data['date_end'], False)))
+      st.write("Nombre de textes sur cette période : {}".format(response["text_numbers"]))
       st.write("Probabilité moyenne d'émotion négative : {} %".format(response["average_negative_emotion"]))
       st.write("Probabilité moyenne d'émotion positive : {} %".format(response["average_positive_emotion"]))
     except IntegrityError :
