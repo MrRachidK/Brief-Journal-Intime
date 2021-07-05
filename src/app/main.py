@@ -5,7 +5,7 @@ import requests
 from datetime import datetime, date
 from src.config import user, passwd
 from src.utils.create_database import add_customer, customer_age
-from mysql.connector.errors import ProgrammingError, IntegrityError
+from mysql.connector.errors import IntegrityError
 from src.utils.functions import *
 import locale 
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
@@ -97,7 +97,7 @@ elif menu == "Supprimer un utilisateur":
   user_data['date_of_birth'] = str(user_data['date_of_birth'])
   formatted_date = get_formatted_date(user_data['date_of_birth'])
 
-  submit_button = st.button("Submit")
+  submit_button = st.button("Soumettre")
   
   if submit_button:
     try:
@@ -137,7 +137,7 @@ elif menu == "Afficher le texte d'un utilisateur et ses infos à une date préci
   user_data['text_date'] = st.date_input('Date du texte', value = None, min_value = date(1900, 1, 1))
   user_data['text_date'] = str(user_data['text_date'])
 
-  submit_button = st.button("Submit")
+  submit_button = st.button("Soumettre")
   
   if submit_button:
     try:
@@ -170,7 +170,7 @@ elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une périod
   user_data['date_end'] = st.date_input('Date la plus récente', value = None, min_value = date(1900, 1, 1))
   user_data['date_end'] = str(user_data['date_end'])
 
-  submit_button = st.button("Submit")
+  submit_button = st.button("Soumettre")
   
   if submit_button:
     try:
@@ -199,7 +199,7 @@ else :
   user_data['date_end'] = st.date_input('Date la plus récente', value = None, min_value = date(1900, 1, 1))
   user_data['date_end'] = str(user_data['date_end'])
 
-  submit_button = st.button("Submit")
+  submit_button = st.button("Soumettre")
   
   if submit_button:
     try:

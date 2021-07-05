@@ -35,12 +35,20 @@ def preprocessor(text):
     text = re.sub('[\W]+', ' ', text.lower()) + ' '.join(emoticons).replace('-', '')
     return text
 
+
 def predict_emotion(message, vectorizer, model):
     """ Function which predicts an emotion according to a model """
     emotions = ['émotion négative', 'émotion positive']
+    try:
+        if not message:
+            raise ValueError('There is no message. You have to write a message')
+    except ValueError as ValErr:
+        print(ValErr)
+
     preprocessed_message = preprocessor(message)
     vectorized_message = vectorizer.transform([preprocessed_message])
     emotion = model[0].predict(vectorized_message)
+    print(emotion)
     proba_emotion = model[0].predict_proba(vectorized_message)
     return emotions[int(emotion)], proba_emotion
 

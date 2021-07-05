@@ -31,7 +31,7 @@ if menu == "Ajouter un nouveau texte":
     user_data['text_date'] = st.date_input('Date du jour', value = None, min_value = date(1900, 1, 1))
     user_data['text_date'] = str(user_data['text_date'])
 
-    submit_button = st.button("Submit")
+    submit_button = st.button("Soumettre")
 
     if submit_button:
         try :
@@ -62,7 +62,7 @@ elif menu == "Modifier un texte":
     st.write("Veuillez renseigner votre nouveau texte")
     user_data['text'] = st.text_input("Votre texte")
 
-    submit_button = st.button("Submit")
+    submit_button = st.button("Soumettre")
 
     if submit_button:
         try :
@@ -86,7 +86,7 @@ else :
     st.write("Voulez-vous consulter un texte à une date précise ? (Y pour Oui / N pour Non)")
     answer = st.text_input("Votre réponse")
 
-    submit_button = st.button("Submit", key="1")
+    submit_button = st.button("Soumettre", key="1")
 
     if answer.lower() == "y":
         st.write("Veuillez renseigner votre ID")
@@ -96,7 +96,7 @@ else :
         user_data['text_date'] = st.date_input('Date souhaitée', value = None, min_value = date(1900, 1, 1))
         user_data['text_date'] = str(user_data['text_date'])
 
-        first_submit_button = st.button("Submit", key="2")
+        first_submit_button = st.button("Soumettre", key="2")
 
         if first_submit_button:
 
@@ -115,7 +115,7 @@ else :
         st.write("Veuillez renseigner votre ID")
         user_data['id_customer'] = st.text_input("Id de l'utilisateur")
 
-        second_submit_button = st.button("Submit", key="3")
+        second_submit_button = st.button("Soumettre", key="3")
 
         if second_submit_button:
 
