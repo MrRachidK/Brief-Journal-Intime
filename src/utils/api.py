@@ -1,14 +1,14 @@
 import sys
 sys.path.insert(0, "/home/apprenant/Documents/Brief-Journal-Intime/")
-from fastapi import FastAPI, Form
-import datetime
-from typing import Optional
-from src.config import user, passwd
-from src.utils.create_database import add_customer, add_text, customer_age, model, vectorizer
-from src.utils.functions import *
-from src.utils.classes import *
+from fastapi import FastAPI
+from src.utils.create_database import create_coaching_database, create_customer_if_not_exists, create_text_if_not_exists, add_customer, add_text, create_customer_age
+from src.utils.functions import call_connector, predict_emotion
+from src.utils.classes import Text, TextBase, Customer, UserBase
+import joblib
+import uvicorn
 
-db_connection, db_cursor = call_connector()
+model = joblib.load("/home/apprenant/Documents/Brief-Journal-Intime/src/models/regression_logistique_model.sav")
+vectorizer = joblib.load("/home/apprenant/Documents/Brief-Journal-Intime/src/models/regression_logistique_vectorizer.joblib")
 
 app = FastAPI()
 
@@ -22,18 +22,19 @@ def home():
 
 @app.post("/create_text")
 def create_text(entry_text:Text):
+    db_connection, db_cursor = call_connector()
     text_first_emotion, proba_emotion = predict_emotion(entry_text.text, vectorizer, model)
     proba_negative_emotion = round(proba_emotion[0][0] * 100, 4) 
     proba_positive_emotion = round(proba_emotion[0][1] * 100, 4)
     text_data = [(entry_text.id_customer, entry_text.text_date, entry_text.text, text_first_emotion, proba_negative_emotion, proba_positive_emotion)]
-    db_cursor.executemany(add_text, text_data)
-    db_connection.commit()
+    add_text(db_connection, db_cursor, text_data)
     return {"id_customer" : entry_text.id_customer, "text_date" : entry_text.text_date, "text" : entry_text.text, "text_first_emotion" : text_first_emotion, "proba_negative_emotion" : proba_negative_emotion, "proba_positive_emotion" : proba_positive_emotion}
 
 # Requête pour modifier un texte dans la base de données
 
 @app.put("/modify_text")
 def modify_text(modify_text : Text):
+    db_connection, db_cursor = call_connector()
     text_first_emotion, proba_emotion = predict_emotion(modify_text.text, vectorizer, model)
     proba_negative_emotion = round(proba_emotion[0][0] * 100, 4) 
     proba_positive_emotion = round(proba_emotion[0][1] * 100, 4)
@@ -46,7 +47,7 @@ def modify_text(modify_text : Text):
 
 @app.get("/get_text")
 def get_text(get_text : Text):
-    db_cursor = db_connection.cursor(buffered=True, dictionary=True)
+    db_connection, db_cursor = call_connector(isDictionnary=True)
     if get_text.text_date == None :
         query = """ SELECT * FROM text WHERE id_customer = '%d' """
         db_cursor.execute(query%(get_text.id_customer))
@@ -69,16 +70,17 @@ def get_text(get_text : Text):
 
 @app.post("/create_customer")
 async def create_customer(customer:UserBase):
+    db_connection, db_cursor = call_connector()
     customer_data = [(customer.name, customer.first_name, str(customer.date_of_birth))]
-    db_cursor.executemany(add_customer, customer_data)
-    db_cursor.execute(customer_age)
-    db_connection.commit()
+    add_customer(db_cursor, db_connection, customer_data)
+    create_customer_age(db_connection, db_cursor)
     return customer
 
 # Requête pour supprimer un client dans la base de données
 
 @app.delete("/delete_customer")
 def delete_customer(customer:UserBase):
+    db_connection, db_cursor = call_connector()
     query = """ DELETE FROM customer WHERE name = '%s' AND first_name = '%s' AND date_of_birth = '%s'"""
     db_cursor.execute(query % (customer.name, customer.first_name, customer.date_of_birth))
     db_connection.commit()
@@ -88,17 +90,18 @@ def delete_customer(customer:UserBase):
 
 @app.put("/modify_customer")
 def modify_customer(customer:Customer):
+    db_connection, db_cursor = call_connector()
     query = """ UPDATE customer SET name = '%s', first_name = '%s', date_of_birth='%s' WHERE id_customer = '%d'"""
     db_cursor.execute(query%(customer.name, customer.first_name, customer.date_of_birth, customer.id_customer))
-    db_cursor.execute(customer_age)
     db_connection.commit()
+    create_customer_age(db_connection, db_cursor)
     return {"new_name" : customer.name, "new_first_name" : customer.first_name, "new_date_of_birth" : customer.date_of_birth}
 
 # Requête pour lister tous les clients et les informations sur eux
 
 @app.get("/get_client_infos")
 def get_client_infos():
-    db_cursor = db_connection.cursor(buffered=True, dictionary=True)
+    db_connection, db_cursor = call_connector(isDictionnary=True)
     query = """ SELECT * FROM customer """
     db_cursor.execute(query)
     rows = db_cursor.fetchall()
@@ -113,7 +116,7 @@ def get_client_infos():
 
 @app.get("/get_text_infos")
 def get_text_infos(text : TextBase):
-    db_cursor = db_connection.cursor(buffered=True, dictionary=True)
+    db_connection, db_cursor = call_connector(isDictionnary=True)
     isGettingInfos = True
     while isGettingInfos:
         if text.text_date != None :
@@ -137,7 +140,7 @@ def get_text_infos(text : TextBase):
 
 @app.get("/get_average_feeling_wheel_client")
 def get_average_feeling_wheel_client(text:TextBase):
-    db_cursor = db_connection.cursor(buffered=True, dictionary=True)
+    db_connection, db_cursor = call_connector(isDictionnary=True)
     query = """ SELECT * FROM text WHERE id_customer = '%d' AND (text_date >= '%s' AND text_date <= '%s') """
     db_cursor.execute(query%(text.id_customer, text.date_start, text.date_end))
     rows = db_cursor.fetchall()
@@ -161,7 +164,7 @@ def get_average_feeling_wheel_client(text:TextBase):
 
 @app.get("/get_average_feeling_wheel_clients")
 def get_average_feeling_wheel_clients(text:TextBase):
-    db_cursor = db_connection.cursor(buffered=True, dictionary=True)
+    db_connection, db_cursor = call_connector(isDictionnary=True)
     query = """ SELECT * FROM text WHERE text_date >= '%s' AND text_date <= '%s' """
     db_cursor.execute(query%(text.date_start, text.date_end))
     rows = db_cursor.fetchall()
@@ -180,3 +183,9 @@ def get_average_feeling_wheel_clients(text:TextBase):
     average_feeling_wheel_clients["average_negative_emotion"] = round(average_feeling_wheel_clients["average_negative_emotion"] / len(rows), 4)
     average_feeling_wheel_clients["average_positive_emotion"] = round(average_feeling_wheel_clients["average_positive_emotion"] / len(rows), 4)
     return average_feeling_wheel_clients
+
+if __name__ == "__main__" :
+    create_coaching_database()
+    create_customer_if_not_exists()
+    create_text_if_not_exists()
+    uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -2,11 +2,10 @@ import sys
 sys.path.insert(0, "/home/apprenant/Documents/Brief-Journal-Intime/")
 import streamlit as st
 import requests
-from datetime import datetime, date
-from src.config import user, passwd
-from src.utils.create_database import add_customer, customer_age
+from datetime import date
+from src.utils.create_database import create_customer_age
 from mysql.connector.errors import IntegrityError
-from src.utils.functions import *
+from src.utils.functions import call_connector, get_formatted_date
 import locale 
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
@@ -45,9 +44,7 @@ if menu == "Créer un utilisateur" :
       st.write("Date de naissance : {}".format(get_formatted_date(response["date_of_birth"], False)))
     except :
       st.write("Nous n\'avons pas pu enregistrer ces informations car le client existe déjà dans la base de données")
-    db_cursor.execute(customer_age)
-
-  db_connection.commit()
+    create_customer_age(db_connection, db_cursor)
 
 elif menu == "Modifier un utilisateur":
   db_connection, db_cursor = call_connector()
@@ -78,7 +75,6 @@ elif menu == "Modifier un utilisateur":
     st.write("Nom : {}".format(response['new_name']))
     st.write("Prénom : {}".format(response['new_first_name']))
     st.write("Date de naissance : {}".format(get_formatted_date(response['new_date_of_birth'], False)))
-  db_connection.commit()
 
 elif menu == "Supprimer un utilisateur":
   db_connection, db_cursor = call_connector()
@@ -109,7 +105,6 @@ elif menu == "Supprimer un utilisateur":
       st.write("Date de naissance : {}".format(get_formatted_date(response['date_of_birth']), False))
     except :
       st.write("Nous n\'avons pas pu supprimer ces informations car le client n'existe pas dans la base de données")
-  db_connection.commit()
 
 elif menu == "Lister tous les clients et les informations sur eux" :
   db_connection, db_cursor = call_connector()
@@ -151,7 +146,6 @@ elif menu == "Afficher le texte d'un utilisateur et ses infos à une date préci
       st.write("Probabilité d'une émotion positive : {} %".format(response["0"]["proba_positive_emotion"]))
     except KeyError :
       st.write("Aucun texte de cet ID utilisateur n'existe dans la base de données")
-  db_connection.commit()
 
 elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une période donnée":
   db_connection, db_cursor = call_connector()
@@ -183,7 +177,6 @@ elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une périod
       st.write("Probabilité moyenne d'émotion positive : {} %".format(response["average_positive_emotion"]))
     except :
       st.write("Aucun texte n'est répertorié sur cette période-là")
-  db_connection.commit()
 
 else :
   db_connection, db_cursor = call_connector()
@@ -213,4 +206,3 @@ else :
       st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
     except requests.ConnectionError as error:
       print(error)
-  db_connection.commit()

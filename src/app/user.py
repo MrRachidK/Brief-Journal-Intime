@@ -3,9 +3,8 @@ sys.path.insert(0, "/home/apprenant/Documents/Brief-Journal-Intime/")
 import streamlit as st
 import requests
 from datetime import date
-from src.config import user, passwd
-from src.utils.create_database import add_customer, customer_age, IntegrityError
-from src.utils.functions import *
+from mysql.connector.errors import IntegrityError
+from src.utils.functions import call_connector, get_formatted_date
 import locale 
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
@@ -44,8 +43,6 @@ if menu == "Ajouter un nouveau texte":
         except requests.ConnectionError as error:
             print(error)
     
-    db_connection.commit()
-
 elif menu == "Modifier un texte":
     db_connection, db_cursor = call_connector()
     url = 'http://localhost:8000/modify_text'
@@ -75,8 +72,6 @@ elif menu == "Modifier un texte":
         except requests.ConnectionError as error:
             print(error)
     
-    db_connection.commit()
-
 else :
     db_connection, db_cursor = call_connector()
     url = 'http://localhost:8000/get_text'
@@ -134,5 +129,3 @@ else :
                 st.write("Nous n\'avons pas pu vous enregistrer car vous existez déjà dans la base de données")
             except requests.ConnectionError as error:
                 print(error)
-        
-    db_connection.commit()
