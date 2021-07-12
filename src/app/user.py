@@ -15,8 +15,8 @@ menu = st.sidebar.radio("Que souhaitez-vous faire ?", ("Ajouter un nouveau texte
 st.subheader("Aujourd'hui, nous sommes le {0:%d} {0:%B} {0:%Y}.".format(d))
 
 if menu == "Ajouter un nouveau texte":
-    db_connection, db_cursor = call_connector()
-    url = 'http://localhost:8000/create_text'
+    db_connection, db_cursor = call_connector("coaching")
+    url = 'http://localhost:8000/create_text/coaching'
 
     user_data = {}
 
@@ -44,8 +44,8 @@ if menu == "Ajouter un nouveau texte":
             print(error)
     
 elif menu == "Modifier un texte":
-    db_connection, db_cursor = call_connector()
-    url = 'http://localhost:8000/modify_text'
+    db_connection, db_cursor = call_connector("coaching")
+    url = 'http://localhost:8000/modify_text/coaching'
 
     user_data = {}
 
@@ -73,8 +73,8 @@ elif menu == "Modifier un texte":
             print(error)
     
 else :
-    db_connection, db_cursor = call_connector()
-    url = 'http://localhost:8000/get_text'
+    db_connection, db_cursor = call_connector("coaching")
+    url = 'http://localhost:8000/get_text/coaching'
 
     user_data = {}
 

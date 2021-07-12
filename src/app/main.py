@@ -14,8 +14,8 @@ menu = st.sidebar.radio("Que souhaitez-vous faire ?", ("Créer un utilisateur", 
 # Création d'un client
 
 if menu == "Créer un utilisateur" :
-  db_connection, db_cursor = call_connector()
-  url = 'http://localhost:8000/create_customer'
+  db_connection, db_cursor = call_connector("coaching")
+  url = 'http://localhost:8000/create_customer/coaching'
   
   user_data = {}
 
@@ -44,11 +44,11 @@ if menu == "Créer un utilisateur" :
       st.write("Date de naissance : {}".format(get_formatted_date(response["date_of_birth"], False)))
     except :
       st.write("Nous n\'avons pas pu enregistrer ces informations car le client existe déjà dans la base de données")
-    create_customer_age(db_connection, db_cursor)
+    create_customer_age(db_connection, db_cursor, "coaching")
 
 elif menu == "Modifier un utilisateur":
-  db_connection, db_cursor = call_connector()
-  url = 'http://localhost:8000/modify_customer'
+  db_connection, db_cursor = call_connector("coaching")
+  url = 'http://localhost:8000/modify_customer/coaching'
 
   user_data = {}
 
@@ -77,8 +77,8 @@ elif menu == "Modifier un utilisateur":
     st.write("Date de naissance : {}".format(get_formatted_date(response['new_date_of_birth'], False)))
 
 elif menu == "Supprimer un utilisateur":
-  db_connection, db_cursor = call_connector()
-  url = 'http://localhost:8000/delete_customer'
+  db_connection, db_cursor = call_connector("coaching")
+  url = 'http://localhost:8000/delete_customer/coaching'
 
   user_data = {}
 
@@ -107,8 +107,8 @@ elif menu == "Supprimer un utilisateur":
       st.write("Nous n\'avons pas pu supprimer ces informations car le client n'existe pas dans la base de données")
 
 elif menu == "Lister tous les clients et les informations sur eux" :
-  db_connection, db_cursor = call_connector()
-  url = 'http://localhost:8000/get_client_infos'
+  db_connection, db_cursor = call_connector("coaching")
+  url = 'http://localhost:8000/get_client_infos/coaching'
   response = requests.get(url)
   response = response.json()
   st.title("Liste des différents clients")
@@ -120,8 +120,8 @@ elif menu == "Lister tous les clients et les informations sur eux" :
     st.markdown("_________")
 
 elif menu == "Afficher le texte d'un utilisateur et ses infos à une date précise":
-  db_connection, db_cursor = call_connector()
-  url = 'http://localhost:8000/get_text_infos'
+  db_connection, db_cursor = call_connector("coaching")
+  url = 'http://localhost:8000/get_text_infos/coaching'
 
   user_data = {}
 
@@ -148,8 +148,8 @@ elif menu == "Afficher le texte d'un utilisateur et ses infos à une date préci
       st.write("Aucun texte de cet ID utilisateur n'existe dans la base de données")
 
 elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une période donnée":
-  db_connection, db_cursor = call_connector()
-  url = 'http://localhost:8000/get_average_feeling_wheel_client'
+  db_connection, db_cursor = call_connector("coaching")
+  url = 'http://localhost:8000/get_average_feeling_wheel_client/coaching'
 
   user_data = {}
 
@@ -179,8 +179,8 @@ elif menu == "Obtenir la roue des sentiments moyenne d'un client sur une périod
       st.write("Aucun texte n'est répertorié sur cette période-là")
 
 else :
-  db_connection, db_cursor = call_connector()
-  url = 'http://localhost:8000/get_average_feeling_wheel_clients'
+  db_connection, db_cursor = call_connector("coaching")
+  url = 'http://localhost:8000/get_average_feeling_wheel_clients/coaching'
 
   user_data = {}
 
