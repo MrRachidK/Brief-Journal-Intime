@@ -70,6 +70,7 @@ def predict_emotion(message, vectorizer, model):
     return emotions[int(emotion)], proba_emotion
 
 def get_formatted_date(date, isCapitalized = True):
+    """ Function which formats a date """
     date_to_datetime = datetime.datetime.strptime(date, '%Y-%m-%d')
     datetime_to_string = date_to_datetime.strftime("%A %d %B %Y")
     if isCapitalized:
