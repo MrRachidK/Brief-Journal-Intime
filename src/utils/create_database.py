@@ -1,22 +1,22 @@
 from os import name
 import sys
 sys.path.insert(0, "/home/apprenant/Documents/Brief-Journal-Intime/")
-from mysql.connector.errors import ProgrammingError
+from mysql.connector.errors import IntegrityError, ProgrammingError
 from src.utils.functions import call_connector
 
-def create_coaching_database():
+def create_database(database_name):
      # Creation of our database named "coaching"
      db_connection, db_cursor = call_connector()
-     create_database = "CREATE DATABASE IF NOT EXISTS coaching" # Query to create the database
+     create_database = "CREATE DATABASE IF NOT EXISTS {}".format(database_name) # Query to create the database
      try:
          db_cursor.execute(create_database)
-     except ProgrammingError as progErr:
+     except ProgrammingError:
          print("La database n'existe pas !")
      db_connection.commit()
 
-def display_db():
+def display_db(database_name):
      # Connection with MySQL
-     db_connection, db_cursor = call_connector()
+     db_connection, db_cursor = call_connector(database_name)
      show_databases = "SHOW DATABASES" # Query to show the databases
      db_cursor.execute(show_databases) # Displaying of our databases
 
@@ -24,10 +24,10 @@ def display_db():
           print(db) # Printing of all the databases
 
 
-def create_customer_if_not_exists():
+def create_customer_if_not_exists(database_name):
      # Creation of the table 'customer' if it does not exists
-     db_connection, db_cursor = call_connector() # Connection with MySQL
-     use_database = "USE coaching"
+     db_connection, db_cursor = call_connector(database_name) # Connection with MySQL
+     use_database = "USE {}".format(database_name)
      db_cursor.execute(use_database)
      create_customer_table = """CREATE TABLE IF NOT EXISTS customer(
      id_customer INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -40,9 +40,9 @@ def create_customer_if_not_exists():
      db_cursor.execute(create_customer_table)
      db_connection.commit()
 
-def add_customer(db_connection, db_cursor, customer_data):
+def add_customer(db_connection, db_cursor, database_name, customer_data):
      # Creation of a customer
-     db_connection, db_cursor = call_connector()
+     db_connection, db_cursor = call_connector(database_name)
      add_customer = ("INSERT INTO customer "
                "(name, first_name, date_of_birth)"
                "VALUES (%s, %s, %s)"
@@ -50,29 +50,29 @@ def add_customer(db_connection, db_cursor, customer_data):
      db_cursor.executemany(add_customer, customer_data)
      db_connection.commit()
 
-def add_unique_customer():
+def add_unique_customer(database_name):
      # Creation of an unique customer
-     db_connection, db_cursor = call_connector() # Connection with MySQL
+     db_connection, db_cursor = call_connector(database_name) # Connection with MySQL
      add_unique_customer = ("""ALTER TABLE customer
                          ADD CONSTRAINT UC_Customer UNIQUE (name, first_name, date_of_birth); 
                          """)
      try:
           db_cursor.execute(add_unique_customer)
-     except ProgrammingError as progErr:
+     except IntegrityError:
           print("Attention ! Vous essayez de renseigner un même client")
      db_connection.commit()
 
-def create_customer_age(db_connection, db_cursor):
+def create_customer_age(db_connection, db_cursor, database_name):
      # Creation of customer age
-     db_connection, db_cursor = call_connector()
+     db_connection, db_cursor = call_connector(database_name)
      customer_age = "UPDATE customer SET age = (SELECT DATE_FORMAT(NOW(), '%Y') - DATE_FORMAT(date_of_birth, '%Y') - (DATE_FORMAT(NOW(), '00-%m-%d') < DATE_FORMAT(date_of_birth, '00-%m-%d')))"
      db_cursor.execute(customer_age)
      db_connection.commit()
 
-def create_text_if_not_exists():
+def create_text_if_not_exists(database_name):
      # Creation of the table 'text' if it does not exists
-     db_connection, db_cursor = call_connector()
-     use_database = "USE coaching"
+     db_connection, db_cursor = call_connector(database_name)
+     use_database = "USE {}".format(database_name)
      db_cursor.execute(use_database)
      create_text_table = """ CREATE TABLE IF NOT EXISTS text(
      id_text INTEGER UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -88,9 +88,9 @@ def create_text_if_not_exists():
      db_cursor.execute(create_text_table)
      db_connection.commit()
 
-def add_text(db_connection, db_cursor, text_data):
+def add_text(db_connection, db_cursor, database_name, text_data):
      # Add text to the text table
-     db_connection, db_cursor = call_connector()
+     db_connection, db_cursor = call_connector(database_name)
      add_text = ("INSERT INTO text"
             "(id_customer, text_date, text, text_first_emotion, proba_negative_emotion, proba_positive_emotion)"
             "VALUES (%s, %s, %s, %s, %s, %s)"
@@ -98,8 +98,16 @@ def add_text(db_connection, db_cursor, text_data):
      db_cursor.executemany(add_text, text_data)
      db_connection.commit()
 
+def delete_database(database_name):
+     db_connection, db_cursor = call_connector(database_name)
+     drop_database = "DROP DATABASE {}".format(database_name)
+     db_cursor.execute(drop_database)
+     db_connection.commit()
+ 
 if __name__ == "__main__":
-     create_coaching_database()
-     display_db()
-     create_customer_if_not_exists()
-     create_text_if_not_exists()
+     delete_database("coaching")
+     create_database("coaching")
+     display_db("coaching")
+     create_customer_if_not_exists("coaching")
+     add_unique_customer("coaching")
+     create_text_if_not_exists("coaching")

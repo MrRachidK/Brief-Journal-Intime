@@ -4,3 +4,5 @@ src/utils/__pycache__
 env/
 __pycache__/
 .pytest_cache/
+htmlcov/
+.coverage

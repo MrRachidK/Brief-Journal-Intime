@@ -6,13 +6,27 @@ import random
 import re
 from src.config import user, passwd
 
-def call_connector(isDictionnary = False):
+def call_connector(db = "none", isDictionnary = False):
     """ Function which connects to MySQL """
-    db_connection = mysql.connector.connect(
-    host="localhost",
-    user=user,
-    passwd = passwd,
-    database="coaching")
+    if db == "none":
+        db_connection = mysql.connector.connect(
+        host="localhost",
+        user=user,
+        passwd = passwd)
+
+    elif db == "coaching_test":
+        db_connection = mysql.connector.connect(
+        host="localhost",
+        user=user,
+        passwd = passwd,
+        database="coaching_test")
+    
+    else:
+        db_connection = mysql.connector.connect(
+        host="localhost",
+        user=user,
+        passwd = passwd,
+        database="coaching")
 
     if isDictionnary == True :
         db_cursor = db_connection.cursor(buffered=True, dictionary=True)
