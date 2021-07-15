@@ -2,8 +2,6 @@ import sys
 sys.path.insert(0, "/home/apprenant/Documents/Brief-Journal-Intime/")
 from src.utils.create_database import create_database, create_customer_if_not_exists, create_text_if_not_exists, add_unique_customer, delete_database
 
-from mysql.connector.errors import IntegrityError
-import pytest
 import warnings
 from fastapi.testclient import TestClient
 from src.utils.api import app
@@ -25,8 +23,6 @@ create_text_if_not_exists("coaching_test")
 
 # we test if the API works and the get operation sends the good result
 
-
-
 # CRUD customer : Create a customer
 def test_create_customer():
   json={
@@ -47,7 +43,9 @@ def test_create_customer():
 def test_get_client_infos():
   response = client.get("/get_client_infos/coaching_test")
   assert response.status_code == 200
-
+  data = response.json()
+  assert data["1"]['name'] == "Vasseur"
+ 
 # CRUD customer : Update (Modify) a customer
 def test_modify_customer():
   json={
